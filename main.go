@@ -20,6 +20,10 @@ func main() {
 		log.Println("No .env file found, using system environment variables")
 	}
 
+	// Log environment info for debugging
+	log.Printf("Environment PORT: %s", os.Getenv("PORT"))
+	log.Printf("Environment DATABASE_URL: %s", os.Getenv("DATABASE_URL"))
+
 	// Initialize database
 	db, err := database.InitDB()
 	if err != nil {
