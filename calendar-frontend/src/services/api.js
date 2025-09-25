@@ -13,7 +13,7 @@ const getApiUrl = () => {
   }
   
   // Por defecto, usar el backend en Railway
-  return 'https://calendar-backend-production.up.railway.app';
+  return 'https://web-production-e67c7.up.railway.app';
 };
 
 const api = axios.create({
