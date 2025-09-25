@@ -23,6 +23,8 @@ func main() {
 	// Log environment info for debugging
 	log.Printf("Environment PORT: %s", os.Getenv("PORT"))
 	log.Printf("Environment DATABASE_URL: %s", os.Getenv("DATABASE_URL"))
+	log.Printf("Environment RAILWAY_PUBLIC_DOMAIN: %s", os.Getenv("RAILWAY_PUBLIC_DOMAIN"))
+	log.Printf("Environment RAILWAY_STATIC_URL: %s", os.Getenv("RAILWAY_STATIC_URL"))
 
 	// Initialize database
 	db, err := database.InitDB()
