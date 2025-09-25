@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"calendar-backend/database"
 	"calendar-backend/handlers"
 
 	"github.com/gin-gonic/gin"
@@ -45,6 +46,34 @@ func SetupAllRoutes(router *gin.Engine, eventController *handlers.EventControlle
 
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
+		// Check database connectivity
+		db := database.GetDB()
+		if db == nil {
+			c.JSON(503, gin.H{
+				"status":  "error",
+				"message": "Database not connected",
+			})
+			return
+		}
+
+		// Test database connection
+		sqlDB, err := db.DB()
+		if err != nil {
+			c.JSON(503, gin.H{
+				"status":  "error",
+				"message": "Database connection error",
+			})
+			return
+		}
+
+		if err := sqlDB.Ping(); err != nil {
+			c.JSON(503, gin.H{
+				"status":  "error",
+				"message": "Database ping failed",
+			})
+			return
+		}
+
 		c.JSON(200, gin.H{
 			"status":  "ok",
 			"message": "Calendar API is running",
