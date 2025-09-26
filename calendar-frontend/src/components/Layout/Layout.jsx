@@ -23,7 +23,10 @@ const Layout = ({ children }) => {
             <a href="#" className="nav-item">Eventos</a>
             <a href="#" className="nav-item">Estadísticas</a>
             <button
-              onClick={() => setShowFamilySettings(true)}
+              onClick={() => {
+                console.log('🔍 Opening family settings...');
+                setShowFamilySettings(true);
+              }}
               className="nav-item"
             >
               👨‍👩‍👧‍👦 Familia

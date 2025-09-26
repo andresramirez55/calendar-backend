@@ -26,7 +26,8 @@ type Event struct {
 	NotifyFamily bool   `json:"notify_family" gorm:"default:false"`     // Notificar a la familia
 	NotifyPapa   bool   `json:"notify_papa" gorm:"default:false"`        // Notificar al papá
 	NotifyMama   bool   `json:"notify_mama" gorm:"default:false"`        // Notificar a la mamá
-	ChildTag     string `json:"child_tag"`                               // Etiqueta del hijo
+	ChildTag     string `json:"child_tag"`                               // Etiqueta del hijo (deprecated)
+	SelectedChildren string `json:"selected_children" gorm:"type:text"` // JSON array de hijos seleccionados
 	FamilyMembers string `json:"family_members" gorm:"type:text"`       // JSON de miembros de familia
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
@@ -53,6 +54,7 @@ type CreateEventRequest struct {
 	NotifyPapa   bool   `json:"notify_papa"`
 	NotifyMama   bool   `json:"notify_mama"`
 	ChildTag     string `json:"child_tag"`
+	SelectedChildren string `json:"selected_children"`
 	FamilyMembers string `json:"family_members"`
 }
 
@@ -76,6 +78,7 @@ type UpdateEventRequest struct {
 	NotifyPapa   *bool   `json:"notify_papa"`
 	NotifyMama   *bool   `json:"notify_mama"`
 	ChildTag     *string `json:"child_tag"`
+	SelectedChildren *string `json:"selected_children"`
 	FamilyMembers *string `json:"family_members"`
 }
 
@@ -100,6 +103,7 @@ type EventResponse struct {
 	NotifyPapa        bool      `json:"notify_papa"`
 	NotifyMama        bool      `json:"notify_mama"`
 	ChildTag          string    `json:"child_tag"`
+	SelectedChildren  string    `json:"selected_children"`
 	FamilyMembers     string    `json:"family_members"`
 	CreatedAt         time.Time `json:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at"`
@@ -126,6 +130,7 @@ func (e *Event) ToResponse() EventResponse {
 		NotifyPapa:        e.NotifyPapa,
 		NotifyMama:        e.NotifyMama,
 		ChildTag:          e.ChildTag,
+		SelectedChildren:  e.SelectedChildren,
 		FamilyMembers:     e.FamilyMembers,
 		CreatedAt:         e.CreatedAt,
 		UpdatedAt:         e.UpdatedAt,

@@ -4,11 +4,21 @@ import { getDefaultContacts } from '../../config/familyConfig';
 const FamilySettings = ({ onClose }) => {
   const [familyMembers, setFamilyMembers] = useState(getDefaultContacts());
   const [kids, setKids] = useState(['María', 'Sofía', 'Ana', 'Lucía']);
+  
+  console.log('🔍 FamilySettings component mounted');
+  console.log('🔍 Initial family members:', familyMembers);
+  console.log('🔍 Initial kids:', kids);
 
   const handleSave = () => {
-    // Aquí guardarías la configuración en localStorage o en el backend
-    localStorage.setItem('familyMembers', JSON.stringify(familyMembers));
-    localStorage.setItem('kids', JSON.stringify(kids));
+    // Guardar la configuración familiar completa
+    const familyConfig = {
+      familyMembers: familyMembers,
+      kids: kids,
+      lastUpdated: new Date().toISOString()
+    };
+    
+    localStorage.setItem('familyConfig', JSON.stringify(familyConfig));
+    console.log('✅ Family configuration saved:', familyConfig);
     onClose();
   };
 
