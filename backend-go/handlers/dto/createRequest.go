@@ -24,6 +24,13 @@ type CreateEventRequest struct {
 	Color             string `json:"color" validate:"hexcolor"`
 	Priority          string `json:"priority" validate:"oneof=low medium high"`
 	Category          string `json:"category" validate:"max=50"`
+	// Campos de notificación familiar
+	NotifyFamily      bool   `json:"notify_family"`
+	NotifyPapa        bool   `json:"notify_papa"`
+	NotifyMama        bool   `json:"notify_mama"`
+	ChildTag          string `json:"child_tag"`
+	SelectedChildren  string `json:"selected_children"`
+	FamilyMembers     string `json:"family_members"`
 }
 
 // ToEvent convierte el DTO a un modelo Event
@@ -86,6 +93,13 @@ func (req *CreateEventRequest) ToEvent() (*models.Event, error) {
 		Color:             req.Color,
 		Priority:          req.Priority,
 		Category:          req.Category,
+		// Campos de notificación familiar
+		NotifyFamily:      req.NotifyFamily,
+		NotifyPapa:        req.NotifyPapa,
+		NotifyMama:        req.NotifyMama,
+		ChildTag:          req.ChildTag,
+		SelectedChildren:  req.SelectedChildren,
+		FamilyMembers:     req.FamilyMembers,
 	}, nil
 }
 

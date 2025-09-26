@@ -3,6 +3,7 @@ package services
 import (
 	"calendar-backend/config"
 	"calendar-backend/models"
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -139,5 +140,199 @@ func (s *NotificationService) SendNotification(event *models.Event, reminderType
 		log.Printf("Failed to send WhatsApp notification: %v", err)
 	}
 
+	// Send family notifications if enabled
+	if err := s.SendFamilyNotifications(event, reminderType); err != nil {
+		log.Printf("Failed to send family notifications: %v", err)
+	}
+
+	return nil
+}
+
+// FamilyMember representa un miembro de la familia
+type FamilyMember struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	Phone string `json:"phone"`
+	Role  string `json:"role"`
+}
+
+// SendFamilyNotifications envía notificaciones a los miembros de la familia seleccionados
+func (s *NotificationService) SendFamilyNotifications(event *models.Event, reminderType string) error {
+	if !event.NotifyFamily {
+		log.Println("Family notifications not enabled for this event")
+		return nil
+	}
+
+	// Parsear miembros de la familia
+	var familyMembers []FamilyMember
+	if event.FamilyMembers != "" {
+		if err := json.Unmarshal([]byte(event.FamilyMembers), &familyMembers); err != nil {
+			log.Printf("Error parsing family members: %v", err)
+			return err
+		}
+	}
+
+	// Parsear hijos seleccionados
+	var selectedChildren []string
+	if event.SelectedChildren != "" {
+		if err := json.Unmarshal([]byte(event.SelectedChildren), &selectedChildren); err != nil {
+			log.Printf("Error parsing selected children: %v", err)
+			return err
+		}
+	}
+
+	// Determinar a quién notificar
+	var recipients []FamilyMember
+
+	// Si se debe notificar al papá
+	if event.NotifyPapa {
+		for _, member := range familyMembers {
+			if member.Role == "papa" {
+				recipients = append(recipients, member)
+			}
+		}
+	}
+
+	// Si se debe notificar a la mamá
+	if event.NotifyMama {
+		for _, member := range familyMembers {
+			if member.Role == "mama" {
+				recipients = append(recipients, member)
+			}
+		}
+	}
+
+	// Enviar notificaciones a los destinatarios
+	for _, recipient := range recipients {
+		// Enviar email si tiene email
+		if recipient.Email != "" {
+			if err := s.sendFamilyEmailNotification(event, &recipient, selectedChildren, reminderType); err != nil {
+				log.Printf("Error sending email to %s: %v", recipient.Email, err)
+			}
+		}
+
+		// Enviar WhatsApp si tiene teléfono
+		if recipient.Phone != "" {
+			if err := s.sendFamilyWhatsAppNotification(event, &recipient, selectedChildren, reminderType); err != nil {
+				log.Printf("Error sending WhatsApp to %s: %v", recipient.Phone, err)
+			}
+		}
+	}
+
+	return nil
+}
+
+// sendFamilyEmailNotification envía un email a un miembro de la familia
+func (s *NotificationService) sendFamilyEmailNotification(event *models.Event, recipient *FamilyMember, selectedChildren []string, reminderType string) error {
+	if s.cfg.SendGridAPIKey == "" {
+		log.Println("SendGrid API key not configured, skipping family email notification")
+		return nil
+	}
+
+	from := mail.NewEmail("Calendar Reminder", s.cfg.FromEmail)
+	to := mail.NewEmail(recipient.Name, recipient.Email)
+
+	var subject string
+	var body string
+
+	// Crear mensaje personalizado con información de los hijos
+	childrenInfo := ""
+	if len(selectedChildren) > 0 {
+		childrenInfo = fmt.Sprintf("\n\nEste evento es para: %s", fmt.Sprintf("%v", selectedChildren))
+	}
+
+	switch reminderType {
+	case "day_before":
+		subject = fmt.Sprintf("Recordatorio familiar: %s mañana", event.Title)
+		body = fmt.Sprintf(`
+			Hola %s!
+			
+			Te recordamos que mañana tenés:
+			
+			Evento: %s
+			Fecha: %s
+			Hora: %s
+			%s%s
+			
+			¡No te lo pierdas!
+		`, recipient.Name, event.Title, event.Date.Format("02/01/2006"), event.Time,
+			func() string {
+				if event.Location != "" {
+					return fmt.Sprintf("Ubicación: %s", event.Location)
+				}
+				return ""
+			}(), childrenInfo)
+	case "same_day":
+		subject = fmt.Sprintf("Recordatorio familiar: %s hoy", event.Title)
+		body = fmt.Sprintf(`
+			Hola %s!
+			
+			Te recordamos que hoy tenés:
+			
+			Evento: %s
+			Hora: %s
+			%s%s
+			
+			¡Que tengas un buen día!
+		`, recipient.Name, event.Title, event.Time,
+			func() string {
+				if event.Location != "" {
+					return fmt.Sprintf("Ubicación: %s", event.Location)
+				}
+				return ""
+			}(), childrenInfo)
+	}
+
+	message := mail.NewSingleEmail(from, subject, to, body, body)
+	client := sendgrid.NewSendClient(s.cfg.SendGridAPIKey)
+
+	response, err := client.Send(message)
+	if err != nil {
+		return fmt.Errorf("failed to send family email: %v", err)
+	}
+
+	log.Printf("Family email sent successfully to %s (%s), status: %d", recipient.Email, recipient.Name, response.StatusCode)
+	return nil
+}
+
+// sendFamilyWhatsAppNotification envía un WhatsApp a un miembro de la familia
+func (s *NotificationService) sendFamilyWhatsAppNotification(event *models.Event, recipient *FamilyMember, selectedChildren []string, reminderType string) error {
+	if s.cfg.TwilioAccountSID == "" || s.cfg.TwilioAuthToken == "" {
+		log.Println("Twilio credentials not configured, skipping family WhatsApp notification")
+		return nil
+	}
+
+	client := twilio.NewRestClientWithParams(twilio.ClientParams{
+		Username: s.cfg.TwilioAccountSID,
+		Password: s.cfg.TwilioAuthToken,
+	})
+
+	var message string
+	childrenInfo := ""
+	if len(selectedChildren) > 0 {
+		childrenInfo = fmt.Sprintf("\n\nEste evento es para: %s", fmt.Sprintf("%v", selectedChildren))
+	}
+
+	switch reminderType {
+	case "day_before":
+		message = fmt.Sprintf("Hola %s! Te recordamos que mañana tenés: %s el %s a las %s%s. ¡No te lo pierdas!", 
+			recipient.Name, event.Title, event.Date.Format("02/01/2006"), event.Time, childrenInfo)
+	case "same_day":
+		message = fmt.Sprintf("Hola %s! Te recordamos que hoy tenés: %s a las %s%s. ¡Que tengas un buen día!", 
+			recipient.Name, event.Title, event.Time, childrenInfo)
+	}
+
+	params := &twilioApi.CreateMessageParams{}
+	params.SetTo("whatsapp:" + recipient.Phone)
+	params.SetFrom("whatsapp:" + s.cfg.TwilioPhoneNumber)
+	params.SetBody(message)
+
+	resp, err := client.Api.CreateMessage(params)
+	if err != nil {
+		return fmt.Errorf("failed to send family WhatsApp: %v", err)
+	}
+
+	log.Printf("Family WhatsApp sent successfully to %s (%s), SID: %s", recipient.Phone, recipient.Name, *resp.Sid)
 	return nil
 }
