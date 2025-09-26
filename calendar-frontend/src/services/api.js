@@ -8,13 +8,20 @@ const getApiUrl = () => {
   }
   
   // Si hay una variable de entorno específica, usarla
-  if (import.meta.env.VITE_API_URL) {
+  if (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL !== 'BACKEND_NOT_CONFIGURED') {
     return import.meta.env.VITE_API_URL;
   }
   
-  // Por defecto, usar el backend en Railway
-  return 'https://calendar-backend-production.up.railway.app';
+  // En producción, usar el backend en Railway
+  return 'https://web-production-e67c7.up.railway.app';
 };
+
+// Log para debug
+console.log('API URL:', getApiUrl());
+console.log('Environment:', import.meta.env.MODE);
+console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
+console.log('VITE_API_URL type:', typeof import.meta.env.VITE_API_URL);
+console.log('VITE_API_URL length:', import.meta.env.VITE_API_URL?.length);
 
 const api = axios.create({
   baseURL: getApiUrl(),
@@ -23,11 +30,30 @@ const api = axios.create({
   },
 });
 
-// Interceptor para manejar errores
+// Interceptor para manejar errores y HTML responses
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Verificar si la respuesta es HTML en lugar de JSON
+    if (response.data && typeof response.data === 'string' && response.data.includes('<!doctype html>')) {
+      console.error('❌ Backend returned HTML instead of JSON - Backend not available');
+      console.error('❌ Response data:', response.data.substring(0, 200) + '...');
+      throw new Error('BACKEND_NOT_AVAILABLE');
+    }
+    
+    console.log('✅ Response successful:', response.status, typeof response.data);
+    return response;
+  },
   (error) => {
-    console.error('API Error:', error.response?.data || error.message);
+    console.error('❌ API Error:', error.response?.status, error.response?.data);
+    console.error('❌ Error details:', error.message);
+    
+    // Si es error de red o 404, considerar backend no disponible
+    if (error.code === 'ERR_NETWORK' || 
+        (error.response && error.response.status === 404)) {
+      console.warn('⚠️ Network error or 404 - Backend not available');
+      throw new Error('BACKEND_NOT_AVAILABLE');
+    }
+    
     return Promise.reject(error);
   }
 );
@@ -48,7 +74,10 @@ export const eventService = {
 
   // Crear nuevo evento
   createEvent: async (eventData) => {
+    console.log('Creating event with data:', eventData);
+    console.log('API URL:', getApiUrl());
     const response = await api.post('/api/v1/events/', eventData);
+    console.log('Event creation response:', response);
     return response.data;
   },
 

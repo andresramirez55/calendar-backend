@@ -1,145 +1,104 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useEvents } from '../../contexts/EventContext';
+import FamilySettings from '../FamilySettings/FamilySettings';
 
 const Layout = ({ children }) => {
   const { loading, error, clearError } = useEvents();
+  const [showFamilySettings, setShowFamilySettings] = useState(false);
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-      {/* Header */}
-      <header style={{ 
-        backgroundColor: 'white', 
-        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)', 
-        borderBottom: '1px solid #e2e8f0' 
-      }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1rem' }}>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            height: '64px' 
-          }}>
-            {/* Logo */}
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <h1 style={{ 
-                fontSize: '1.25rem', 
-                fontWeight: 'bold', 
-                color: '#3b82f6' 
-              }}>
-                📅 Calendar App
-              </h1>
-            </div>
-
-            {/* Navigation */}
-            <nav style={{ display: 'flex', gap: '2rem' }}>
-              <a href="#" style={{ 
-                color: '#1e293b', 
-                padding: '0.5rem 0.75rem', 
-                fontSize: '0.875rem', 
-                fontWeight: '500',
-                textDecoration: 'none'
-              }}>
-                Calendario
-              </a>
-              <a href="#" style={{ 
-                color: '#64748b', 
-                padding: '0.5rem 0.75rem', 
-                fontSize: '0.875rem', 
-                fontWeight: '500',
-                textDecoration: 'none'
-              }}>
-                Eventos
-              </a>
-              <a href="#" style={{ 
-                color: '#64748b', 
-                padding: '0.5rem 0.75rem', 
-                fontSize: '0.875rem', 
-                fontWeight: '500',
-                textDecoration: 'none'
-              }}>
-                Estadísticas
-              </a>
-            </nav>
+    <div className="min-h-screen">
+      {/* Clean Header */}
+      <header className="header">
+        <div className="header-content">
+          {/* Logo */}
+          <div className="logo">
+            <div className="logo-icon">📅</div>
+            <div className="logo-text">Calendar App</div>
           </div>
+
+          {/* Navigation */}
+          <nav className="nav">
+            <a href="#" className="nav-item active">Calendario</a>
+            <a href="#" className="nav-item">Eventos</a>
+            <a href="#" className="nav-item">Estadísticas</a>
+            <button
+              onClick={() => setShowFamilySettings(true)}
+              className="nav-item"
+            >
+              👨‍👩‍👧‍👦 Familia
+            </button>
+          </nav>
         </div>
       </header>
 
       {/* Main content */}
-      <main style={{ 
-        maxWidth: '1280px', 
-        margin: '0 auto', 
-        padding: '1.5rem 1rem' 
-      }}>
-        {children}
+      <main className="w-full min-h-screen">
+        <div className="w-full max-w-none">
+          {children}
+        </div>
       </main>
 
-      {/* Loading overlay */}
+      {/* Modern Loading overlay */}
       {loading && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.25)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 50
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '0.5rem',
-            padding: '1.5rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem'
-          }}>
-            <div style={{
-              width: '24px',
-              height: '24px',
-              border: '2px solid #e2e8f0',
-              borderTop: '2px solid #3b82f6',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }}></div>
-            <span style={{ color: '#374151' }}>Cargando...</span>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-white/95 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20 flex items-center space-x-4">
+            <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+            <span className="text-gray-700 font-semibold text-lg">Cargando eventos...</span>
           </div>
         </div>
       )}
 
-      {/* Error notification */}
+      {/* Modern Error notification */}
       {error && (
-        <div style={{
-          position: 'fixed',
-          top: '1rem',
-          right: '1rem',
-          backgroundColor: '#fef2f2',
-          border: '1px solid #fecaca',
-          color: '#dc2626',
-          padding: '0.75rem 1rem',
-          borderRadius: '0.375rem',
-          zIndex: 50,
-          maxWidth: '24rem'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.875rem' }}>{error}</span>
+        <div className={`fixed top-4 right-4 border px-6 py-4 rounded-2xl shadow-lg z-50 max-w-md animate-slideUp backdrop-blur-lg ${
+          error.includes('demostración') || error.includes('HTML en lugar de JSON') 
+            ? 'bg-yellow-50 border-yellow-200 text-yellow-800' 
+            : 'bg-red-50 border-red-200 text-red-800'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                error.includes('demostración') || error.includes('HTML en lugar de JSON')
+                  ? 'bg-yellow-100'
+                  : 'bg-red-100'
+              }`}>
+                <span className={`text-sm ${
+                  error.includes('demostración') || error.includes('HTML en lugar de JSON')
+                    ? 'text-yellow-600'
+                    : 'text-red-600'
+                }`}>
+                  {error.includes('demostración') || error.includes('HTML en lugar de JSON') ? '💡' : '⚠️'}
+                </span>
+              </div>
+              <div>
+                <span className="font-medium">{error}</span>
+                {error.includes('demostración') && (
+                  <p className="text-xs opacity-75 mt-1">
+                    Los datos mostrados son de demostración
+                  </p>
+                )}
+              </div>
             </div>
             <button
               onClick={clearError}
-              style={{
-                marginLeft: '1rem',
-                color: '#dc2626',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer'
-              }}
+              className={`ml-4 p-1 rounded-full transition-all duration-200 ${
+                error.includes('demostración') || error.includes('HTML en lugar de JSON')
+                  ? 'text-yellow-600 hover:text-yellow-800 hover:bg-yellow-100'
+                  : 'text-red-600 hover:text-red-800 hover:bg-red-100'
+              }`}
             >
-              ✕
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
         </div>
+      )}
+
+      {/* Configuración familiar */}
+      {showFamilySettings && (
+        <FamilySettings onClose={() => setShowFamilySettings(false)} />
       )}
     </div>
   );

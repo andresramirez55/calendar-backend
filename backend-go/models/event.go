@@ -22,6 +22,12 @@ type Event struct {
 	Color     string         `json:"color" gorm:"default:'#007AFF'"`   // Color del evento
 	Priority  string         `json:"priority" gorm:"default:'medium'"` // Prioridad: low, medium, high
 	Category  string         `json:"category"`                         // Categoría del evento
+	// Campos de notificación familiar
+	NotifyFamily bool   `json:"notify_family" gorm:"default:false"`     // Notificar a la familia
+	NotifyPapa   bool   `json:"notify_papa" gorm:"default:false"`        // Notificar al papá
+	NotifyMama   bool   `json:"notify_mama" gorm:"default:false"`        // Notificar a la mamá
+	ChildTag     string `json:"child_tag"`                               // Etiqueta del hijo
+	FamilyMembers string `json:"family_members" gorm:"type:text"`       // JSON de miembros de familia
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `json:"deleted_at,omitempty" gorm:"index"`
@@ -42,6 +48,12 @@ type CreateEventRequest struct {
 	Color    string `json:"color"`
 	Priority string `json:"priority"`
 	Category string `json:"category"`
+	// Campos de notificación familiar
+	NotifyFamily bool   `json:"notify_family"`
+	NotifyPapa   bool   `json:"notify_papa"`
+	NotifyMama   bool   `json:"notify_mama"`
+	ChildTag     string `json:"child_tag"`
+	FamilyMembers string `json:"family_members"`
 }
 
 type UpdateEventRequest struct {
@@ -59,6 +71,12 @@ type UpdateEventRequest struct {
 	Color    *string `json:"color"`
 	Priority *string `json:"priority"`
 	Category *string `json:"category"`
+	// Campos de notificación familiar
+	NotifyFamily *bool   `json:"notify_family"`
+	NotifyPapa   *bool   `json:"notify_papa"`
+	NotifyMama   *bool   `json:"notify_mama"`
+	ChildTag     *string `json:"child_tag"`
+	FamilyMembers *string `json:"family_members"`
 }
 
 // EventResponse es la respuesta optimizada para apps móviles
@@ -77,6 +95,12 @@ type EventResponse struct {
 	Color             string    `json:"color"`
 	Priority          string    `json:"priority"`
 	Category          string    `json:"category"`
+	// Campos de notificación familiar
+	NotifyFamily      bool      `json:"notify_family"`
+	NotifyPapa        bool      `json:"notify_papa"`
+	NotifyMama        bool      `json:"notify_mama"`
+	ChildTag          string    `json:"child_tag"`
+	FamilyMembers     string    `json:"family_members"`
 	CreatedAt         time.Time `json:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at"`
 }
@@ -98,6 +122,11 @@ func (e *Event) ToResponse() EventResponse {
 		Color:             e.Color,
 		Priority:          e.Priority,
 		Category:          e.Category,
+		NotifyFamily:      e.NotifyFamily,
+		NotifyPapa:        e.NotifyPapa,
+		NotifyMama:        e.NotifyMama,
+		ChildTag:          e.ChildTag,
+		FamilyMembers:     e.FamilyMembers,
 		CreatedAt:         e.CreatedAt,
 		UpdatedAt:         e.UpdatedAt,
 	}

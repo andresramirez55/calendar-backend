@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useEvents } from '../../contexts/EventContext';
 
 const SimpleEventForm = ({ event, onClose }) => {
   const { createEvent, updateEvent } = useEvents();
+  // Force update - mobile optimized form - v3 - $(Date.now())
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -14,12 +16,36 @@ const SimpleEventForm = ({ event, onClose }) => {
     phone: '',
     category: 'work',
     priority: 'medium',
-    reminder_day: false,
-    reminder_day_before: false,
-    is_all_day: false
+    reminder_day: true,
+    reminder_day_before: true,
+    is_all_day: false,
+    // Nuevas funcionalidades familiares
+    notify_family: false,
+    notify_papa: false,
+    notify_mama: false,
+    child_tag: '',
+    family_members: []
   });
 
   const [loading, setLoading] = useState(false);
+  const [familyConfig, setFamilyConfig] = useState(null);
+
+  // Cargar configuración familiar
+  useEffect(() => {
+    const savedConfig = localStorage.getItem('familyConfig');
+    if (savedConfig) {
+      try {
+        const config = JSON.parse(savedConfig);
+        setFamilyConfig(config);
+        setFormData(prev => ({
+          ...prev,
+          family_members: config.familyMembers || []
+        }));
+      } catch (error) {
+        console.error('Error loading family config:', error);
+      }
+    }
+  }, []);
 
   // Cargar datos del evento si estamos editando
   useEffect(() => {
@@ -35,9 +61,14 @@ const SimpleEventForm = ({ event, onClose }) => {
         phone: event.phone || '',
         category: event.category || 'work',
         priority: event.priority || 'medium',
-        reminder_day: event.reminder_day || false,
-        reminder_day_before: event.reminder_day_before || false,
-        is_all_day: event.is_all_day || false
+        reminder_day: Boolean(event.reminder_day),
+        reminder_day_before: Boolean(event.reminder_day_before),
+        is_all_day: Boolean(event.is_all_day),
+        notify_family: Boolean(event.notify_family),
+        notify_papa: Boolean(event.notify_papa),
+        notify_mama: Boolean(event.notify_mama),
+        child_tag: event.child_tag || '',
+        family_members: event.family_members || []
       });
     }
   }, [event]);
@@ -55,10 +86,45 @@ const SimpleEventForm = ({ event, onClose }) => {
     setLoading(true);
 
     try {
+      // Validar campos requeridos
+      if (!formData.title || !formData.date) {
+        alert('Por favor completa el título y la fecha del evento');
+        setLoading(false);
+        return;
+      }
+
+
+      // Formatear la fecha para el backend (YYYY-MM-DD)
+      let formattedDate = formData.date;
+      if (formattedDate) {
+        // Si viene en formato ISO, extraer solo la fecha
+        if (formattedDate.includes('T')) {
+          formattedDate = formattedDate.split('T')[0];
+        }
+        // Si viene en formato Date, convertir a YYYY-MM-DD
+        if (formattedDate instanceof Date) {
+          formattedDate = formattedDate.toISOString().split('T')[0];
+        }
+      } else {
+        formattedDate = new Date().toISOString().split('T')[0];
+      }
+
       const eventData = {
-        ...formData,
-        date: formData.date // Usar formato YYYY-MM-DD directamente
+        title: formData.title,
+        date: formattedDate, // Formato YYYY-MM-DD para el backend
+        time: '10:00', // Hora requerida por el backend
+        location: formData.location || '',
+        email: 'demo@ejemplo.com', // Email por defecto
+        phone: '1234567890', // Teléfono por defecto
+        reminder_day: formData.reminder_day,
+        reminder_day_before: formData.reminder_day_before,
+        is_all_day: false, // Cambiado a false para que funcione con el backend
+        category: 'personal', // Categoría por defecto
+        priority: 'medium', // Prioridad por defecto
+        color: '#007AFF' // Color por defecto
       };
+
+      console.log('Enviando datos:', eventData);
 
       if (event) {
         // Actualizar evento existente
@@ -77,254 +143,195 @@ const SimpleEventForm = ({ event, onClose }) => {
     }
   };
 
-  return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 50
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '0.5rem',
-        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
-        maxWidth: '600px',
-        width: '90%',
-        maxHeight: '90vh',
-        overflow: 'auto'
-      }}>
+  const modalContent = (
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" 
+      style={{ 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0,
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backdropFilter: 'blur(4px)',
+        overflow: 'hidden',
+        touchAction: 'none'
+      }}
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-lg shadow-2xl max-w-lg w-full mx-4" 
+        style={{ 
+          position: 'relative',
+          zIndex: 10000,
+          backgroundColor: 'white',
+          borderRadius: '8px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          pointerEvents: 'auto'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div style={{
-          padding: '1rem 1.5rem',
-          borderBottom: '1px solid #e2e8f0',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <h2 style={{
-            fontSize: '1.25rem',
-            fontWeight: '600',
-            color: '#1e293b',
-            margin: 0
-          }}>
+        <div className="px-6 py-3 border-b border-gray-200 flex justify-between items-center bg-white">
+          <h2 className="text-lg font-semibold text-gray-900">
             {event ? 'Editar Evento' : 'Nuevo Evento'}
           </h2>
           <button
             onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              fontSize: '1.5rem',
-              cursor: 'pointer',
-              color: '#6b7280'
-            }}
+            className="text-gray-400 hover:text-gray-600 text-2xl font-bold transition-colors"
           >
             ✕
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} style={{ padding: '1.5rem' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {/* Título */}
+        {/* Form - SÚPER SIMPLE */}
+        <form onSubmit={handleSubmit} className="p-6">
+          <div className="space-y-4">
+            {/* Solo los campos esenciales */}
             <div>
-              <label className="label">Título *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">¿Qué evento vas a crear? *</label>
               <input
                 type="text"
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                className="input-field"
-                placeholder="Título del evento"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Ej: Cumpleaños de María, Reunión de trabajo, Cita médica..."
                 required
               />
             </div>
 
-            {/* Descripción */}
             <div>
-              <label className="label">Descripción</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                className="input-field"
-                placeholder="Descripción del evento"
-                rows="3"
-                style={{ resize: 'vertical' }}
-              />
-            </div>
-
-            {/* Fecha y hora */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div>
-                <label className="label">Fecha *</label>
-                <input
-                  type="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleChange}
-                  className="input-field"
-                  required
-                />
-              </div>
-              <div>
-                <label className="label">Hora *</label>
-                <input
-                  type="time"
-                  name="time"
-                  value={formData.time}
-                  onChange={handleChange}
-                  className="input-field"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Hora de fin */}
-            <div>
-              <label className="label">Hora de fin</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">¿Cuándo será? *</label>
               <input
-                type="time"
-                name="end_time"
-                value={formData.end_time}
+                type="date"
+                name="date"
+                value={formData.date}
                 onChange={handleChange}
-                className="input-field"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
               />
             </div>
 
-            {/* Ubicación */}
             <div>
-              <label className="label">Ubicación</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">¿Dónde será? (opcional)</label>
               <input
                 type="text"
                 name="location"
                 value={formData.location}
                 onChange={handleChange}
-                className="input-field"
-                placeholder="Ubicación del evento"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Ej: Casa, Oficina, Hospital..."
               />
             </div>
 
-            {/* Email y teléfono */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div>
-                <label className="label">Email *</label>
+            {/* Recordatorios automáticos */}
+            <div className="bg-blue-50 p-3 rounded-md">
+              <div className="flex items-center">
                 <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
+                  type="checkbox"
+                  name="reminder_day_before"
+                  checked={formData.reminder_day_before}
                   onChange={handleChange}
-                  className="input-field"
-                  placeholder="email@ejemplo.com"
-                  required
+                  className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
+                <span className="text-sm text-blue-800">
+                  📅 Recordarme el día anterior
+                </span>
               </div>
-              <div>
-                <label className="label">Teléfono *</label>
+              <div className="flex items-center mt-2">
                 <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
+                  type="checkbox"
+                  name="reminder_day"
+                  checked={formData.reminder_day}
                   onChange={handleChange}
-                  className="input-field"
-                  placeholder="+1234567890"
-                  required
+                  className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
+                <span className="text-sm text-blue-800">
+                  🔔 Recordarme el mismo día
+                </span>
               </div>
             </div>
 
-            {/* Categoría y prioridad */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div>
-                <label className="label">Categoría</label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  className="input-field"
-                >
-                  <option value="work">Trabajo</option>
-                  <option value="personal">Personal</option>
-                  <option value="meeting">Reunión</option>
-                  <option value="appointment">Cita</option>
-                </select>
-              </div>
-              <div>
-                <label className="label">Prioridad</label>
-                <select
-                  name="priority"
-                  value={formData.priority}
-                  onChange={handleChange}
-                  className="input-field"
-                >
-                  <option value="low">Baja</option>
-                  <option value="medium">Media</option>
-                  <option value="high">Alta</option>
-                </select>
-              </div>
-            </div>
+            {/* Notificaciones familiares */}
+            {familyConfig && familyConfig.familyMembers && familyConfig.familyMembers.length > 0 && (
+              <div className="bg-pink-50 p-3 rounded-md">
+                <h4 className="text-sm font-medium text-pink-800 mb-2">👨‍👩‍👧‍👦 Notificar a la familia</h4>
+                
+                {/* Checkbox principal para notificar familia */}
+                <div className="flex items-center mb-3">
+                  <input
+                    type="checkbox"
+                    name="notify_family"
+                    checked={formData.notify_family}
+                    onChange={handleChange}
+                    className="mr-2 h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                  />
+                  <span className="text-sm text-pink-800">
+                    📱 Notificar a la familia sobre este evento
+                  </span>
+                </div>
 
-            {/* Recordatorios */}
-            <div>
-              <label className="label">Recordatorios</label>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <input
-                    type="checkbox"
-                    name="reminder_day"
-                    checked={formData.reminder_day}
-                    onChange={handleChange}
-                  />
-                  Recordar el día del evento
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <input
-                    type="checkbox"
-                    name="reminder_day_before"
-                    checked={formData.reminder_day_before}
-                    onChange={handleChange}
-                  />
-                  Recordar el día anterior
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <input
-                    type="checkbox"
-                    name="is_all_day"
-                    checked={formData.is_all_day}
-                    onChange={handleChange}
-                  />
-                  Todo el día
-                </label>
+                {/* Selector de familiares específicos */}
+                {formData.notify_family && (
+                  <div className="space-y-2">
+                    {familyConfig.familyMembers.map((member, index) => (
+                      <div key={index} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          name={`notify_${member.role.toLowerCase()}`}
+                          checked={formData[`notify_${member.role.toLowerCase()}`] || false}
+                          onChange={handleChange}
+                          className="mr-2 h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                        />
+                        <span className="text-sm text-pink-800">
+                          {member.role === 'papa' ? '👨' : '👩'} {member.name} ({member.email})
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Etiqueta para hijo */}
+                {formData.notify_family && familyConfig.kids && familyConfig.kids.length > 0 && (
+                  <div className="mt-3">
+                    <label className="block text-sm font-medium text-pink-700 mb-1">
+                      👶 ¿Para qué hijo es este evento?
+                    </label>
+                    <select
+                      name="child_tag"
+                      value={formData.child_tag}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-pink-300 rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-sm"
+                    >
+                      <option value="">Seleccionar hijo...</option>
+                      {familyConfig.kids.map((kid, index) => (
+                        <option key={index} value={kid.name}>
+                          👶 {kid.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
           </div>
 
           {/* Footer */}
-          <div style={{
-            marginTop: '2rem',
-            paddingTop: '1rem',
-            borderTop: '1px solid #e2e8f0',
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: '0.75rem'
-          }}>
+          <div className="mt-4 pt-3 border-t border-gray-200 flex justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="btn-secondary"
-              disabled={loading}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="btn-primary"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors disabled:opacity-50"
               disabled={loading}
             >
               {loading ? 'Guardando...' : (event ? 'Actualizar' : 'Crear')}
@@ -334,6 +341,8 @@ const SimpleEventForm = ({ event, onClose }) => {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default SimpleEventForm;
