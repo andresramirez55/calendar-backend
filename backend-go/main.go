@@ -83,6 +83,14 @@ func main() {
 			"status":  "ok",
 		})
 	})
+	
+	// Test notification ping (direct)
+	router.GET("/api/v1/notifications/ping-direct", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "Direct notification ping endpoint",
+			"status":  "ok",
+		})
+	})
 
 	// Setup all routes
 	log.Println("🔧 Setting up main routes...")
