@@ -3,6 +3,7 @@ package dto
 import (
 	"calendar-backend/models"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -192,19 +193,30 @@ func (req *CreateEventRequest) Sanitize() {
 
 func (req *CreateEventRequest) ProcessRequest(c *gin.Context) (*models.Event, error) {
 	if err := c.ShouldBindJSON(req); err != nil {
+		fmt.Printf("❌ Error binding JSON: %v\n", err)
 		return nil, err
 	}
+
+	// Log the bound request data
+	fmt.Printf("🔍 Bound request data: %+v\n", req)
+	fmt.Printf("🔍 Family fields in request - NotifyFamily: %v, NotifyPapa: %v, NotifyMama: %v\n", 
+		req.NotifyFamily, req.NotifyPapa, req.NotifyMama)
+	fmt.Printf("🔍 FamilyMembers in request: %s\n", req.FamilyMembers)
+	fmt.Printf("🔍 SelectedChildren in request: %s\n", req.SelectedChildren)
 
 	req.Sanitize()
 
 	if err := req.Validate(); err != nil {
+		fmt.Printf("❌ Validation error: %v\n", err)
 		return nil, err
 	}
 
 	event, err := req.ToEvent()
 	if err != nil {
+		fmt.Printf("❌ Error converting to event: %v\n", err)
 		return nil, err
 	}
 
+	fmt.Printf("🔍 Converted event: %+v\n", event)
 	return event, nil
 }
