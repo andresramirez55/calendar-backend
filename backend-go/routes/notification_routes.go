@@ -10,28 +10,28 @@ import (
 
 func SetupNotificationRoutes(router *gin.Engine, notificationService *services.NotificationService, scheduler *services.NotificationScheduler) {
 	notificationController := handlers.NewNotificationController(notificationService, scheduler)
-	
+
 	// Grupo de rutas para notificaciones
 	notificationGroup := router.Group("/api/v1/notifications")
 	{
 		// Endpoint para verificar notificaciones manualmente
 		notificationGroup.POST("/check", notificationController.CheckNotificationsNow)
-		
+
 		// Endpoint para obtener estado del sistema de notificaciones
 		notificationGroup.GET("/status", notificationController.GetNotificationStatus)
-		
+
 		// Endpoint para enviar notificación de prueba
 		notificationGroup.POST("/test", notificationController.SendTestNotification)
-		
+
 		// Endpoint simple de prueba
 		notificationGroup.GET("/ping", func(c *gin.Context) {
 			c.JSON(200, gin.H{
 				"message": "Notification service is working",
-				"status": "ok",
+				"status":  "ok",
 			})
 		})
 	}
-	
+
 	// Log para confirmar que las rutas se registraron
 	fmt.Println("✅ Notification routes registered successfully")
 }
