@@ -17,6 +17,7 @@ type EventRepository interface {
 	GetTodayEvents() ([]models.Event, error)
 	GetUpcomingEvents() ([]models.Event, error)
 	GetEventsForDateRange(startDate, endDate string) ([]models.Event, error)
+	GetEventsByDateRange(startDate, endDate time.Time) ([]*models.Event, error)
 	SearchEvents(query string) ([]models.Event, error)
 	GetEventStats() (map[string]interface{}, error)
 }
@@ -111,4 +112,16 @@ func (r *eventRepository) GetEventStats() (map[string]interface{}, error) {
 	}
 
 	return stats, nil
+}
+
+// GetEventsByDateRange obtiene eventos en un rango de fechas (para notificaciones)
+func (r *eventRepository) GetEventsByDateRange(startDate, endDate time.Time) ([]*models.Event, error) {
+	var events []*models.Event
+	
+	err := r.db.Where("date >= ? AND date < ?", startDate, endDate).Find(&events).Error
+	if err != nil {
+		return nil, err
+	}
+	
+	return events, nil
 }

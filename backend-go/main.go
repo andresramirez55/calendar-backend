@@ -44,10 +44,12 @@ func main() {
 	// Initialize services
 	eventService := services.NewEventService(eventRepo)
 	notificationService := services.NewNotificationService()
-	schedulerService := services.NewSchedulerService(db, notificationService)
-
-	// Start scheduler
-	go schedulerService.Start()
+	
+	// Initialize notification scheduler
+	notificationScheduler := services.NewNotificationScheduler(eventRepo, notificationService)
+	
+	// Start notification scheduler
+	notificationScheduler.Start()
 
 	// Initialize handlers
 	eventController := handlers.NewEventController(eventService)
@@ -66,7 +68,11 @@ func main() {
 	config.AllowCredentials = true
 	router.Use(cors.New(config))
 
+	// Setup all routes
 	routes.SetupAllRoutes(router, eventController, mobileHandler)
+	
+	// Setup notification routes
+	routes.SetupNotificationRoutes(router, notificationService, notificationScheduler)
 
 	// Get port from environment or use default
 	port := os.Getenv("PORT")

@@ -199,7 +199,7 @@ func (req *CreateEventRequest) ProcessRequest(c *gin.Context) (*models.Event, er
 
 	// Log the bound request data
 	fmt.Printf("🔍 Bound request data: %+v\n", req)
-	fmt.Printf("🔍 Family fields in request - NotifyFamily: %v, NotifyPapa: %v, NotifyMama: %v\n", 
+	fmt.Printf("🔍 Family fields in request - NotifyFamily: %v, NotifyPapa: %v, NotifyMama: %v\n",
 		req.NotifyFamily, req.NotifyPapa, req.NotifyMama)
 	fmt.Printf("🔍 FamilyMembers in request: %s\n", req.FamilyMembers)
 	fmt.Printf("🔍 SelectedChildren in request: %s\n", req.SelectedChildren)
