@@ -3,6 +3,7 @@ package routes
 import (
 	"calendar-backend/handlers"
 	"calendar-backend/services"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,5 +22,16 @@ func SetupNotificationRoutes(router *gin.Engine, notificationService *services.N
 		
 		// Endpoint para enviar notificación de prueba
 		notificationGroup.POST("/test", notificationController.SendTestNotification)
+		
+		// Endpoint simple de prueba
+		notificationGroup.GET("/ping", func(c *gin.Context) {
+			c.JSON(200, gin.H{
+				"message": "Notification service is working",
+				"status": "ok",
+			})
+		})
 	}
+	
+	// Log para confirmar que las rutas se registraron
+	fmt.Println("✅ Notification routes registered successfully")
 }

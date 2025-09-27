@@ -69,10 +69,13 @@ func main() {
 	router.Use(cors.New(config))
 
 	// Setup all routes
+	log.Println("🔧 Setting up main routes...")
 	routes.SetupAllRoutes(router, eventController, mobileHandler)
 	
 	// Setup notification routes
+	log.Println("🔧 Setting up notification routes...")
 	routes.SetupNotificationRoutes(router, notificationService, notificationScheduler)
+	log.Println("✅ All routes configured successfully")
 
 	// Get port from environment or use default
 	port := os.Getenv("PORT")
