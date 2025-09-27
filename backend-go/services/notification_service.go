@@ -316,10 +316,10 @@ func (s *NotificationService) sendFamilyWhatsAppNotification(event *models.Event
 
 	switch reminderType {
 	case "day_before":
-		message = fmt.Sprintf("Hola %s! Te recordamos que mañana tenés: %s el %s a las %s%s. ¡No te lo pierdas!", 
+		message = fmt.Sprintf("Hola %s! Te recordamos que mañana tenés: %s el %s a las %s%s. ¡No te lo pierdas!",
 			recipient.Name, event.Title, event.Date.Format("02/01/2006"), event.Time, childrenInfo)
 	case "same_day":
-		message = fmt.Sprintf("Hola %s! Te recordamos que hoy tenés: %s a las %s%s. ¡Que tengas un buen día!", 
+		message = fmt.Sprintf("Hola %s! Te recordamos que hoy tenés: %s a las %s%s. ¡Que tengas un buen día!",
 			recipient.Name, event.Title, event.Time, childrenInfo)
 	}
 

@@ -7,7 +7,7 @@ export const familyConfig = {
       name: 'Papá',
       email: 'papa@familia.com',
       phone: '+1234567890',
-      role: 'parent',
+      role: 'papa',
       color: '#3b82f6'
     },
     {
@@ -15,7 +15,7 @@ export const familyConfig = {
       name: 'Mamá',
       email: 'mama@familia.com',
       phone: '+1234567891',
-      role: 'parent',
+      role: 'mama',
       color: '#ec4899'
     }
   ],

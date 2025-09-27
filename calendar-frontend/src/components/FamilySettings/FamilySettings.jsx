@@ -10,15 +10,23 @@ const FamilySettings = ({ onClose }) => {
   console.log('🔍 Initial kids:', kids);
 
   const handleSave = () => {
+    // Convertir kids de array de strings a array de objetos
+    const kidsObjects = kids.map((kidName, index) => ({
+      id: `kid_${index}`,
+      name: kidName,
+      role: 'child'
+    }));
+    
     // Guardar la configuración familiar completa
     const familyConfig = {
       familyMembers: familyMembers,
-      kids: kids,
+      kids: kidsObjects,
       lastUpdated: new Date().toISOString()
     };
     
     localStorage.setItem('familyConfig', JSON.stringify(familyConfig));
     console.log('✅ Family configuration saved:', familyConfig);
+    console.log('🔍 Kids objects:', kidsObjects);
     onClose();
   };
 

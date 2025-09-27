@@ -1,8 +1,11 @@
 package handlers
 
 import (
+	"bytes"
 	"calendar-backend/handlers/dto"
 	"calendar-backend/services"
+	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -20,17 +23,34 @@ func NewEventController(eventService services.EventService) *EventController {
 func (h *EventController) CreateEvent(c *gin.Context) {
 	var req dto.CreateEventRequest
 
+	// Log the raw request body for debugging
+	body, _ := c.GetRawData()
+	fmt.Printf("🔍 Raw request body: %s\n", string(body))
+
+	// Reset the request body for binding
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+
 	event, err := req.ProcessRequest(c)
 	if err != nil {
+		fmt.Printf("❌ Error processing request: %v\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Log the processed event data
+	fmt.Printf("🔍 Processed event data: %+v\n", event)
+	fmt.Printf("🔍 Family fields - NotifyFamily: %v, NotifyPapa: %v, NotifyMama: %v\n",
+		event.NotifyFamily, event.NotifyPapa, event.NotifyMama)
+	fmt.Printf("🔍 FamilyMembers: %s\n", event.FamilyMembers)
+	fmt.Printf("🔍 SelectedChildren: %s\n", event.SelectedChildren)
 
 	if err := h.eventService.CreateEvent(event); err != nil {
+		fmt.Printf("❌ Error creating event: %v\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	fmt.Printf("✅ Event created successfully with ID: %d\n", event.ID)
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Event created successfully",
 		"event":   event,
