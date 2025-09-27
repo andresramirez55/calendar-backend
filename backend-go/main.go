@@ -42,8 +42,13 @@ func main() {
 	eventRepo := repositories.NewEventRepository(db)
 
 	// Initialize services
+	log.Println("🔧 Initializing event service...")
 	eventService := services.NewEventService(eventRepo)
+	log.Println("✅ Event service initialized")
+	
+	log.Println("🔧 Initializing notification service...")
 	notificationService := services.NewNotificationService()
+	log.Println("✅ Notification service initialized")
 
 	// Initialize notification scheduler
 	log.Println("🔧 Initializing notification scheduler...")
@@ -85,20 +90,27 @@ func main() {
 
 	// Setup notification routes
 	log.Println("🔧 Setting up notification routes...")
-
+	
 	// Verificar que los servicios estén inicializados
 	if notificationService == nil {
 		log.Println("❌ Notification service is nil")
 	} else {
 		log.Println("✅ Notification service initialized")
 	}
-
+	
 	if notificationScheduler == nil {
 		log.Println("❌ Notification scheduler is nil")
 	} else {
 		log.Println("✅ Notification scheduler initialized")
 	}
-
+	
+	// Intentar registrar las rutas con manejo de errores
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("❌ Error setting up notification routes: %v", r)
+		}
+	}()
+	
 	routes.SetupNotificationRoutes(router, notificationService, notificationScheduler)
 	log.Println("✅ All routes configured successfully")
 

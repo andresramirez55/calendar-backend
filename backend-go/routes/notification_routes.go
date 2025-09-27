@@ -10,14 +10,14 @@ import (
 
 func SetupNotificationRoutes(router *gin.Engine, notificationService *services.NotificationService, scheduler *services.NotificationScheduler) {
 	fmt.Println("🔧 Setting up notification routes...")
-	
+
 	// Verificar que los servicios estén disponibles
 	if notificationService == nil {
 		fmt.Println("❌ Notification service is nil")
 		return
 	}
 	fmt.Println("✅ Notification service is available")
-	
+
 	// Crear controller con nil scheduler temporalmente
 	notificationController := handlers.NewNotificationController(notificationService, nil)
 	fmt.Println("✅ Notification controller created")
@@ -25,7 +25,7 @@ func SetupNotificationRoutes(router *gin.Engine, notificationService *services.N
 	// Grupo de rutas para notificaciones
 	notificationGroup := router.Group("/api/v1/notifications")
 	fmt.Println("✅ Notification group created")
-	
+
 	// Endpoint para verificar notificaciones manualmente
 	notificationGroup.POST("/check", notificationController.CheckNotificationsNow)
 	fmt.Println("✅ /check route registered")

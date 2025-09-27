@@ -18,8 +18,16 @@ type NotificationService struct {
 }
 
 func NewNotificationService() *NotificationService {
+	// Cargar configuración con manejo de errores
+	cfg := config.LoadConfig()
+	if cfg == nil {
+		log.Println("⚠️ Warning: Config is nil, using default values")
+		// Crear configuración por defecto
+		cfg = &config.Config{}
+	}
+
 	return &NotificationService{
-		cfg: config.LoadConfig(),
+		cfg: cfg,
 	}
 }
 
