@@ -11,20 +11,28 @@ import (
 
 type NotificationController struct {
 	notificationService *services.NotificationService
-	scheduler          *services.NotificationScheduler
+	scheduler           *services.NotificationScheduler
 }
 
 func NewNotificationController(notificationService *services.NotificationService, scheduler *services.NotificationScheduler) *NotificationController {
 	return &NotificationController{
 		notificationService: notificationService,
-		scheduler:          scheduler,
+		scheduler:           scheduler,
 	}
 }
 
 // CheckNotificationsNow ejecuta manualmente la verificación de notificaciones
 func (h *NotificationController) CheckNotificationsNow(c *gin.Context) {
+	if h.scheduler == nil {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Notification scheduler is not available",
+			"status":  "warning",
+		})
+		return
+	}
+
 	h.scheduler.CheckNotificationsNow()
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Notification check triggered successfully",
 		"status":  "success",
@@ -37,10 +45,10 @@ func (h *NotificationController) GetNotificationStatus(c *gin.Context) {
 		"message": "Notification system is running",
 		"status":  "active",
 		"features": gin.H{
-			"email_notifications": true,
+			"email_notifications":    true,
 			"whatsapp_notifications": true,
-			"family_notifications": true,
-			"scheduler_active": true,
+			"family_notifications":   true,
+			"scheduler_active":       true,
 		},
 	})
 }
@@ -52,12 +60,12 @@ func (h *NotificationController) SendTestNotification(c *gin.Context) {
 		Phone string `json:"phone"`
 		Type  string `json:"type"` // "email", "whatsapp", "both"
 	}
-	
+
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	// Crear evento de prueba
 	testEvent := &models.Event{
 		Title:             "🧪 Notificación de Prueba",
@@ -74,16 +82,16 @@ func (h *NotificationController) SendTestNotification(c *gin.Context) {
 		Priority:          "medium",
 		Category:          "test",
 	}
-	
+
 	// Enviar notificación de prueba
 	if err := h.notificationService.SendNotification(testEvent, "day_before"); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to send test notification",
+			"error":   "Failed to send test notification",
 			"details": err.Error(),
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Test notification sent successfully",
 		"status":  "success",
