@@ -9,7 +9,8 @@ import (
 )
 
 func SetupNotificationRoutes(router *gin.Engine, notificationService *services.NotificationService, scheduler *services.NotificationScheduler) {
-	notificationController := handlers.NewNotificationController(notificationService, scheduler)
+	// Crear controller con nil scheduler temporalmente
+	notificationController := handlers.NewNotificationController(notificationService, nil)
 
 	// Grupo de rutas para notificaciones
 	notificationGroup := router.Group("/api/v1/notifications")

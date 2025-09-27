@@ -44,15 +44,15 @@ func main() {
 	// Initialize services
 	eventService := services.NewEventService(eventRepo)
 	notificationService := services.NewNotificationService()
-	
+
 	// Initialize notification scheduler
 	log.Println("🔧 Initializing notification scheduler...")
 	notificationScheduler := services.NewNotificationScheduler(eventRepo, notificationService)
 	
-	// Start notification scheduler
+	// Start notification scheduler (comentado temporalmente para debug)
 	log.Println("🔧 Starting notification scheduler...")
-	notificationScheduler.Start()
-	log.Println("✅ Notification scheduler started successfully")
+	// notificationScheduler.Start()
+	log.Println("✅ Notification scheduler initialized (not started for debug)")
 
 	// Initialize handlers
 	eventController := handlers.NewEventController(eventService)
@@ -75,30 +75,30 @@ func main() {
 	router.GET("/api/v1/notifications/test-direct", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "Direct notification test endpoint",
-			"status": "ok",
+			"status":  "ok",
 		})
 	})
 
 	// Setup all routes
 	log.Println("🔧 Setting up main routes...")
 	routes.SetupAllRoutes(router, eventController, mobileHandler)
-	
+
 	// Setup notification routes
 	log.Println("🔧 Setting up notification routes...")
-	
+
 	// Verificar que los servicios estén inicializados
 	if notificationService == nil {
 		log.Println("❌ Notification service is nil")
 	} else {
 		log.Println("✅ Notification service initialized")
 	}
-	
+
 	if notificationScheduler == nil {
 		log.Println("❌ Notification scheduler is nil")
 	} else {
 		log.Println("✅ Notification scheduler initialized")
 	}
-	
+
 	routes.SetupNotificationRoutes(router, notificationService, notificationScheduler)
 	log.Println("✅ All routes configured successfully")
 
