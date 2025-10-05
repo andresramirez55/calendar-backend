@@ -17,6 +17,8 @@ import (
 )
 
 func main() {
+	log.Println("🚀 Starting Calendar API...")
+	
 	// Load environment variables
 	// Try to load .env.local first (for local development)
 	if err := godotenv.Load(".env.local"); err != nil {
@@ -41,28 +43,13 @@ func main() {
 	// Initialize repositories
 	eventRepo := repositories.NewEventRepository(db)
 
-	// Initialize services
-	log.Println("🔧 Initializing event service...")
+	// Initialize services (simplificado)
 	eventService := services.NewEventService(eventRepo)
-	log.Println("✅ Event service initialized")
-	
-	log.Println("🔧 Initializing notification service...")
 	notificationService := services.NewNotificationService()
-	log.Println("✅ Notification service initialized")
-
-	// Initialize notification scheduler
-	log.Println("🔧 Initializing notification scheduler...")
 	notificationScheduler := services.NewNotificationScheduler(eventRepo, notificationService)
-	
-	// Start notification scheduler (comentado temporalmente para debug)
-	log.Println("🔧 Starting notification scheduler...")
-	// notificationScheduler.Start()
-	log.Println("✅ Notification scheduler initialized (not started for debug)")
 
 	// Initialize handlers
 	eventController := handlers.NewEventController(eventService)
-
-	// Initialize mobile handler
 	mobileHandler := handlers.NewMobileHandler(db)
 
 	// Setup routes
@@ -83,7 +70,7 @@ func main() {
 			"status":  "ok",
 		})
 	})
-	
+
 	// Test notification ping (direct)
 	router.GET("/api/v1/notifications/ping-direct", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -93,34 +80,10 @@ func main() {
 	})
 
 	// Setup all routes
-	log.Println("🔧 Setting up main routes...")
 	routes.SetupAllRoutes(router, eventController, mobileHandler)
 
-	// Setup notification routes
-	log.Println("🔧 Setting up notification routes...")
-	
-	// Verificar que los servicios estén inicializados
-	if notificationService == nil {
-		log.Println("❌ Notification service is nil")
-	} else {
-		log.Println("✅ Notification service initialized")
-	}
-	
-	if notificationScheduler == nil {
-		log.Println("❌ Notification scheduler is nil")
-	} else {
-		log.Println("✅ Notification scheduler initialized")
-	}
-	
-	// Intentar registrar las rutas con manejo de errores
-	defer func() {
-		if r := recover(); r != nil {
-			log.Printf("❌ Error setting up notification routes: %v", r)
-		}
-	}()
-	
+	// Setup notification routes (simplificado)
 	routes.SetupNotificationRoutes(router, notificationService, notificationScheduler)
-	log.Println("✅ All routes configured successfully")
 
 	// Get port from environment or use default
 	port := os.Getenv("PORT")
