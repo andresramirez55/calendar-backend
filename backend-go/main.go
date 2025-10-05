@@ -67,7 +67,9 @@ func main() {
 	routes.SetupAllRoutes(router, eventController, mobileHandler)
 
 	// Setup notification routes
+	log.Println("🔧 About to setup notification routes...")
 	routes.SetupNotificationRoutes(router, notificationService, notificationScheduler)
+	log.Println("✅ Notification routes setup completed")
 
 	// Test notification endpoint (direct) - AFTER all other routes
 	router.GET("/api/v1/notifications/test-direct", func(c *gin.Context) {
@@ -76,7 +78,7 @@ func main() {
 			"status":  "ok",
 		})
 	})
-	
+
 	// Test notification ping (direct) - AFTER all other routes
 	router.GET("/api/v1/notifications/ping-direct", func(c *gin.Context) {
 		c.JSON(200, gin.H{
