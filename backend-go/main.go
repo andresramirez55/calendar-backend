@@ -63,27 +63,27 @@ func main() {
 	config.AllowCredentials = true
 	router.Use(cors.New(config))
 
-	// Test notification endpoint (direct)
+	// Setup all routes FIRST
+	routes.SetupAllRoutes(router, eventController, mobileHandler)
+
+	// Setup notification routes
+	routes.SetupNotificationRoutes(router, notificationService, notificationScheduler)
+
+	// Test notification endpoint (direct) - AFTER all other routes
 	router.GET("/api/v1/notifications/test-direct", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "Direct notification test endpoint",
 			"status":  "ok",
 		})
 	})
-
-	// Test notification ping (direct)
+	
+	// Test notification ping (direct) - AFTER all other routes
 	router.GET("/api/v1/notifications/ping-direct", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "Direct notification ping endpoint",
 			"status":  "ok",
 		})
 	})
-
-	// Setup all routes
-	routes.SetupAllRoutes(router, eventController, mobileHandler)
-
-	// Setup notification routes (simplificado)
-	routes.SetupNotificationRoutes(router, notificationService, notificationScheduler)
 
 	// Get port from environment or use default
 	port := os.Getenv("PORT")
