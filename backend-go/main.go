@@ -17,8 +17,8 @@ import (
 )
 
 func main() {
-	log.Println("🚀 Starting Calendar API...")
-	
+	log.Println("🚀 Starting Calendar API v2...")
+
 	// Load environment variables
 	// Try to load .env.local first (for local development)
 	if err := godotenv.Load(".env.local"); err != nil {
