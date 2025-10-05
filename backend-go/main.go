@@ -17,7 +17,7 @@ import (
 )
 
 func main() {
-	log.Println("🚀 Starting Calendar API v2...")
+	log.Println("🚀 Starting Calendar API v3 - NOTIFICATION ROUTES FIXED...")
 
 	// Load environment variables
 	// Try to load .env.local first (for local development)
@@ -84,6 +84,15 @@ func main() {
 		c.JSON(200, gin.H{
 			"message": "Direct notification ping endpoint",
 			"status":  "ok",
+		})
+	})
+
+	// Simple test endpoint to verify deployment
+	router.GET("/api/v1/test-deployment", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "Deployment test successful - v3 with notification routes",
+			"status":  "ok",
+			"version": "v3",
 		})
 	})
 
