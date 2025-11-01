@@ -26,6 +26,22 @@ func NewNotificationService() *NotificationService {
 		cfg = &config.Config{}
 	}
 
+	// Log configuration status
+	log.Println("📧 Notification Service Configuration:")
+	if cfg.SendGridAPIKey != "" {
+		log.Printf("  ✅ SendGrid API Key: Configured (from email: %s)", cfg.FromEmail)
+	} else {
+		log.Println("  ⚠️ SendGrid API Key: NOT configured - Email notifications will be skipped")
+		log.Println("  💡 To enable email notifications, set SENDGRID_API_KEY environment variable")
+	}
+
+	if cfg.TwilioAccountSID != "" && cfg.TwilioAuthToken != "" {
+		log.Printf("  ✅ Twilio: Configured (phone: %s)", cfg.TwilioPhoneNumber)
+	} else {
+		log.Println("  ⚠️ Twilio: NOT configured - WhatsApp notifications will be skipped")
+		log.Println("  💡 To enable WhatsApp notifications, set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER")
+	}
+
 	return &NotificationService{
 		cfg: cfg,
 	}
@@ -34,7 +50,7 @@ func NewNotificationService() *NotificationService {
 // SendEmailNotification sends an email reminder for an event
 func (s *NotificationService) SendEmailNotification(event *models.Event, reminderType string) error {
 	if s.cfg.SendGridAPIKey == "" {
-		log.Println("SendGrid API key not configured, skipping email notification")
+		log.Printf("⚠️ SendGrid API key not configured, skipping email notification for event: %s (ID: %d)", event.Title, event.ID)
 		return nil
 	}
 
@@ -94,7 +110,7 @@ func (s *NotificationService) SendEmailNotification(event *models.Event, reminde
 		return fmt.Errorf("failed to send email: %v", err)
 	}
 
-	log.Printf("Email sent successfully to %s, status: %d", event.Email, response.StatusCode)
+	log.Printf("✅ Email sent successfully to %s for event '%s', status: %d", event.Email, event.Title, response.StatusCode)
 	return nil
 }
 

@@ -43,10 +43,15 @@ func main() {
 	// Initialize repositories
 	eventRepo := repositories.NewEventRepository(db)
 
-	// Initialize services (simplificado)
+	// Initialize services
 	eventService := services.NewEventService(eventRepo)
 	notificationService := services.NewNotificationService()
 	notificationScheduler := services.NewNotificationScheduler(eventRepo, notificationService)
+
+	// Start notification scheduler in background
+	log.Println("🔔 Initializing notification scheduler...")
+	notificationScheduler.Start()
+	log.Println("✅ Notification scheduler initialized and running")
 
 	// Initialize handlers
 	eventController := handlers.NewEventController(eventService)
@@ -63,13 +68,9 @@ func main() {
 	config.AllowCredentials = true
 	router.Use(cors.New(config))
 
-	// Setup all routes FIRST
 	routes.SetupAllRoutes(router, eventController, mobileHandler)
 
-	// Setup notification routes
-	log.Println("🔧 About to setup notification routes...")
 	routes.SetupNotificationRoutes(router, notificationService, notificationScheduler)
-	log.Println("✅ Notification routes setup completed")
 
 	// Test notification endpoint (direct) - AFTER all other routes
 	router.GET("/api/v1/notifications/test-direct", func(c *gin.Context) {
