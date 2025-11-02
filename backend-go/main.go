@@ -17,7 +17,7 @@ import (
 )
 
 func main() {
-	log.Println("🚀 Starting Calendar API v3 - NOTIFICATION ROUTES FIXED...")
+	log.Println("🚀 Starting Calendar API v4 - ROUTE DEBUGGING ENABLED...")
 
 	// Load environment variables
 	// Try to load .env.local first (for local development)
@@ -109,7 +109,36 @@ func main() {
 	for _, route := range allRoutes {
 		log.Printf("   %s %s", route.Method, route.Path)
 	}
-	log.Println("✅ Total routes registered:", len(allRoutes))
+	log.Printf("✅ Total routes registered: %d", len(allRoutes))
+
+	// Add diagnostic endpoint to list all routes and system info
+	router.GET("/api/v1/debug/routes", func(c *gin.Context) {
+		routes := router.Routes()
+		routeList := make([]map[string]string, 0, len(routes))
+		notificationRoutes := make([]map[string]string, 0)
+		
+		for _, route := range routes {
+			routeInfo := map[string]string{
+				"method": route.Method,
+				"path":   route.Path,
+			}
+			routeList = append(routeList, routeInfo)
+			
+			// Filter notification routes for easier debugging
+			if len(route.Path) >= 24 && route.Path[:24] == "/api/v1/notifications" {
+				notificationRoutes = append(notificationRoutes, routeInfo)
+			}
+		}
+		
+		c.JSON(200, gin.H{
+			"version": "v3",
+			"total_routes": len(routes),
+			"notification_routes": len(notificationRoutes),
+			"notification_routes_list": notificationRoutes,
+			"all_routes": routeList,
+		})
+	})
+	log.Println("✅ GET /api/v1/debug/routes diagnostic endpoint registered")
 
 	// Get port from environment or use default
 	port := os.Getenv("PORT")
