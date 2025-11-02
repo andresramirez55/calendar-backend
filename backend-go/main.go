@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"time"
 
 	"calendar-backend/database"
 	"calendar-backend/handlers"
@@ -17,7 +18,12 @@ import (
 )
 
 func main() {
-	log.Println("🚀 Starting Calendar API v4 - ROUTE DEBUGGING ENABLED...")
+	// Logs inmediatos para verificar que el código se ejecuta
+	log.Println("========================================")
+	log.Println("🚀 CALENDAR API v5 - STARTING NOW...")
+	log.Println("========================================")
+	log.Println("⏰ Timestamp:", time.Now().Format(time.RFC3339))
+	log.Println("🔍 Checking environment...")
 
 	// Load environment variables
 	// Try to load .env.local first (for local development)
@@ -59,6 +65,28 @@ func main() {
 
 	// Setup routes
 	router := gin.Default()
+	
+	// CRITICAL: Register /health FIRST, before CORS and everything else
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status":  "ok",
+			"message": "Calendar API is running",
+			"version": "v5",
+			"time":    time.Now().Format(time.RFC3339),
+		})
+	})
+	log.Println("✅ CRITICAL: /health endpoint registered FIRST")
+	
+	// Also register root endpoint immediately
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "Welcome to Calendar API",
+			"version": "v5",
+			"health":  "/health",
+			"time":    time.Now().Format(time.RFC3339),
+		})
+	})
+	log.Println("✅ CRITICAL: / (root) endpoint registered FIRST")
 
 	// Configure CORS
 	config := cors.DefaultConfig()
@@ -146,8 +174,14 @@ func main() {
 		port = "8080"
 	}
 
-	log.Printf("Server starting on port %s", port)
+	log.Println("========================================")
+	log.Printf("🚀 Server starting on port %s", port)
+	log.Println("========================================")
+	log.Println("✅ Ready to accept connections!")
+	log.Println("🔍 Test with: curl http://localhost:" + port + "/health")
+	log.Println("========================================")
+	
 	if err := router.Run(":" + port); err != nil {
-		log.Fatal("Failed to start server:", err)
+		log.Fatal("❌ Failed to start server:", err)
 	}
 }

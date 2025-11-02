@@ -20,6 +20,7 @@ func SetupRoutes(router *gin.Engine, eventController *handlers.EventController) 
 			events.DELETE("/:id", eventController.DeleteEvent)
 		}
 	}
+
 }
 
 func SetupMobileRoutes(router *gin.Engine, mobileHandler *handlers.MobileHandler) {
@@ -35,7 +36,6 @@ func SetupMobileRoutes(router *gin.Engine, mobileHandler *handlers.MobileHandler
 	}
 }
 
-// SetupAllRoutes sets up both regular and mobile routes
 func SetupAllRoutes(router *gin.Engine, eventController *handlers.EventController, mobileHandler *handlers.MobileHandler) {
 	// Setup regular routes
 	SetupRoutes(router, eventController)
