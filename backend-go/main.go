@@ -68,9 +68,15 @@ func main() {
 	config.AllowCredentials = true
 	router.Use(cors.New(config))
 
+	// Setup all routes
+	log.Println("🔧 Setting up all routes...")
 	routes.SetupAllRoutes(router, eventController, mobileHandler)
+	log.Println("✅ All routes setup completed")
 
+	// Setup notification routes
+	log.Println("🔧 Setting up notification routes...")
 	routes.SetupNotificationRoutes(router, notificationService, notificationScheduler)
+	log.Println("✅ Notification routes setup completed")
 
 	// Test notification endpoint (direct) - AFTER all other routes
 	router.GET("/api/v1/notifications/test-direct", func(c *gin.Context) {
@@ -96,6 +102,14 @@ func main() {
 			"version": "v3",
 		})
 	})
+
+	// Debug: Log all registered routes (after ALL routes are registered)
+	log.Println("📋 Registered routes summary:")
+	allRoutes := router.Routes()
+	for _, route := range allRoutes {
+		log.Printf("   %s %s", route.Method, route.Path)
+	}
+	log.Println("✅ Total routes registered:", len(allRoutes))
 
 	// Get port from environment or use default
 	port := os.Getenv("PORT")
