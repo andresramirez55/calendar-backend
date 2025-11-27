@@ -155,3 +155,7 @@ Si tienes problemas, verifica los logs de Railway:
 
 Si no ves las variables configuradas, vuelve a revisar la configuración en Railway.
 
+
+
+
+

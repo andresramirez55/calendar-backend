@@ -50,8 +50,10 @@ func (req *CreateEventRequest) ToEvent() (*models.Event, error) {
 		}
 	}
 
-	// Validar que la fecha no sea en el pasado
-	if date.Before(time.Now().Truncate(24 * time.Hour)) {
+	// Validar que la fecha no sea en el pasado (comparación segura en UTC)
+	todayUTC := time.Now().UTC().Truncate(24 * time.Hour)
+	eventDateUTC := date.UTC()
+	if eventDateUTC.Before(todayUTC) {
 		return nil, errors.New("cannot create events in the past")
 	}
 

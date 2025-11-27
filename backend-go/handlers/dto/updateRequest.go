@@ -57,8 +57,10 @@ func (req *UpdateEventRequest) ToEvent() (*models.Event, error) {
 		if err != nil {
 			return nil, errors.New("invalid date format, use YYYY-MM-DD")
 		}
-		// Validar que la fecha no sea en el pasado
-		if date.Before(time.Now().Truncate(24 * time.Hour)) {
+		// Validar que la fecha no sea en el pasado (comparación segura en UTC)
+		todayUTC := time.Now().UTC().Truncate(24 * time.Hour)
+		eventDateUTC := date.UTC()
+		if eventDateUTC.Before(todayUTC) {
 			return nil, errors.New("cannot update events to past dates")
 		}
 		event.Date = date

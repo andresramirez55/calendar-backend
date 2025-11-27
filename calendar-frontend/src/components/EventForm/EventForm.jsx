@@ -205,7 +205,9 @@ const EventForm = ({ event, onClose }) => {
         color: formData.color || '#007AFF'
       };
 
-      if (event) {
+      // Si el evento existe pero no tiene ID (por ejemplo, al crear desde el calendario),
+      // forzamos la creación en lugar de intentar un update con ID undefined.
+      if (event && event.id) {
         await updateEvent(event.id, eventData);
       } else {
         await createEvent(eventData);

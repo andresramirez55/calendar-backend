@@ -4,17 +4,17 @@ import (
 	"calendar-backend/config"
 	"calendar-backend/models"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 
-	"github.com/sendgrid/sendgrid-go"
-	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	"github.com/twilio/twilio-go"
 	twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
 )
 
 type NotificationService struct {
-	cfg *config.Config
+	cfg                *config.Config
+	notificationClient *NotificationClient
 }
 
 func NewNotificationService() *NotificationService {
@@ -26,14 +26,13 @@ func NewNotificationService() *NotificationService {
 		cfg = &config.Config{}
 	}
 
+	// Initialize notification client (microservice)
+	notificationClient := NewNotificationClient(cfg)
+
 	// Log configuration status
 	log.Println("📧 Notification Service Configuration:")
-	if cfg.SendGridAPIKey != "" {
-		log.Printf("  ✅ SendGrid API Key: Configured (from email: %s)", cfg.FromEmail)
-	} else {
-		log.Println("  ⚠️ SendGrid API Key: NOT configured - Email notifications will be skipped")
-		log.Println("  💡 To enable email notifications, set SENDGRID_API_KEY environment variable")
-	}
+	log.Println("  ✅ Using notification microservice for email notifications")
+	log.Println("  💡 Set NOTIFICATION_SERVICE_URL to configure microservice endpoint (default: http://localhost:8081)")
 
 	if cfg.TwilioAccountSID != "" && cfg.TwilioAuthToken != "" {
 		log.Printf("  ✅ Twilio: Configured (phone: %s)", cfg.TwilioPhoneNumber)
@@ -43,20 +42,12 @@ func NewNotificationService() *NotificationService {
 	}
 
 	return &NotificationService{
-		cfg: cfg,
+		cfg:                cfg,
+		notificationClient: notificationClient,
 	}
 }
 
-// SendEmailNotification sends an email reminder for an event
 func (s *NotificationService) SendEmailNotification(event *models.Event, reminderType string) error {
-	if s.cfg.SendGridAPIKey == "" {
-		log.Printf("⚠️ SendGrid API key not configured, skipping email notification for event: %s (ID: %d)", event.Title, event.ID)
-		return nil
-	}
-
-	from := mail.NewEmail("Calendar Reminder", s.cfg.FromEmail)
-	to := mail.NewEmail("User", event.Email)
-
 	var subject string
 	var body string
 
@@ -102,15 +93,12 @@ func (s *NotificationService) SendEmailNotification(event *models.Event, reminde
 			}())
 	}
 
-	message := mail.NewSingleEmail(from, subject, to, body, body)
-	client := sendgrid.NewSendClient(s.cfg.SendGridAPIKey)
-
-	response, err := client.Send(message)
-	if err != nil {
-		return fmt.Errorf("failed to send email: %v", err)
+	// Use notification microservice instead of direct SendGrid call
+	if err := s.notificationClient.SendEmail(event.Email, subject, body, ""); err != nil {
+		return fmt.Errorf("failed to send email via microservice: %v", err)
 	}
 
-	log.Printf("✅ Email sent successfully to %s for event '%s', status: %d", event.Email, event.Title, response.StatusCode)
+	log.Printf("✅ Email notification sent via microservice to %s for event '%s'", event.Email, event.Title)
 	return nil
 }
 
@@ -154,19 +142,25 @@ func (s *NotificationService) SendWhatsAppNotification(event *models.Event, remi
 
 // SendNotification sends both email and WhatsApp notifications
 func (s *NotificationService) SendNotification(event *models.Event, reminderType string) error {
-	// Send email notification
+	var errs []error
+
 	if err := s.SendEmailNotification(event, reminderType); err != nil {
 		log.Printf("Failed to send email notification: %v", err)
+		errs = append(errs, fmt.Errorf("email notification: %w", err))
 	}
 
-	// Send WhatsApp notification
 	if err := s.SendWhatsAppNotification(event, reminderType); err != nil {
 		log.Printf("Failed to send WhatsApp notification: %v", err)
+		errs = append(errs, fmt.Errorf("whatsapp notification: %w", err))
 	}
 
-	// Send family notifications if enabled
 	if err := s.SendFamilyNotifications(event, reminderType); err != nil {
 		log.Printf("Failed to send family notifications: %v", err)
+		errs = append(errs, fmt.Errorf("family notifications: %w", err))
+	}
+
+	if len(errs) > 0 {
+		return errors.Join(errs...)
 	}
 
 	return nil
@@ -249,14 +243,6 @@ func (s *NotificationService) SendFamilyNotifications(event *models.Event, remin
 
 // sendFamilyEmailNotification envía un email a un miembro de la familia
 func (s *NotificationService) sendFamilyEmailNotification(event *models.Event, recipient *FamilyMember, selectedChildren []string, reminderType string) error {
-	if s.cfg.SendGridAPIKey == "" {
-		log.Println("SendGrid API key not configured, skipping family email notification")
-		return nil
-	}
-
-	from := mail.NewEmail("Calendar Reminder", s.cfg.FromEmail)
-	to := mail.NewEmail(recipient.Name, recipient.Email)
-
 	var subject string
 	var body string
 
@@ -308,15 +294,12 @@ func (s *NotificationService) sendFamilyEmailNotification(event *models.Event, r
 			}(), childrenInfo)
 	}
 
-	message := mail.NewSingleEmail(from, subject, to, body, body)
-	client := sendgrid.NewSendClient(s.cfg.SendGridAPIKey)
-
-	response, err := client.Send(message)
-	if err != nil {
-		return fmt.Errorf("failed to send family email: %v", err)
+	// Use notification microservice instead of direct SendGrid call
+	if err := s.notificationClient.SendEmail(recipient.Email, subject, body, recipient.Name); err != nil {
+		return fmt.Errorf("failed to send family email via microservice: %v", err)
 	}
 
-	log.Printf("Family email sent successfully to %s (%s), status: %d", recipient.Email, recipient.Name, response.StatusCode)
+	log.Printf("Family email sent successfully via microservice to %s (%s)", recipient.Email, recipient.Name)
 	return nil
 }
 
