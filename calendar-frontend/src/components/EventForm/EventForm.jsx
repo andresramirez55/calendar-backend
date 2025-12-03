@@ -227,7 +227,7 @@ const EventForm = ({ event, onClose }) => {
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">
-              {event ? 'Editar Evento' : 'Nuevo Evento'}
+              {event && event.id ? 'Editar Evento' : 'Nuevo Evento'}
             </h3>
             <button
               onClick={onClose}
@@ -517,7 +517,7 @@ const EventForm = ({ event, onClose }) => {
               className="btn-primary"
               disabled={loading}
             >
-              {loading ? 'Guardando...' : (event ? 'Actualizar' : 'Crear')}
+              {loading ? 'Guardando...' : (event && event.id ? 'Actualizar' : 'Crear')}
             </button>
           </div>
         </form>
