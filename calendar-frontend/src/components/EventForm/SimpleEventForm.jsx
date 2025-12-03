@@ -217,7 +217,8 @@ const SimpleEventForm = ({ event, onClose }) => {
       console.log('🔍 Email principal usado:', primaryEmail);
       console.log('🔍 Teléfono principal usado:', primaryPhone);
 
-      if (event) {
+      // Solo actualizar si el evento tiene un ID válido
+      if (event && event.id) {
         // Actualizar evento existente
         await updateEvent(event.id, eventData);
       } else {
@@ -268,7 +269,7 @@ const SimpleEventForm = ({ event, onClose }) => {
         {/* Header */}
         <div className="px-6 py-3 border-b border-gray-200 flex justify-between items-center bg-white">
           <h2 className="text-lg font-semibold text-gray-900">
-            {event ? 'Editar Evento' : 'Nuevo Evento'}
+            {event && event.id ? 'Editar Evento' : 'Nuevo Evento'}
           </h2>
           <button
             onClick={onClose}
@@ -496,7 +497,7 @@ const SimpleEventForm = ({ event, onClose }) => {
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors disabled:opacity-50"
               disabled={loading}
             >
-              {loading ? 'Guardando...' : (event ? 'Actualizar' : 'Crear')}
+              {loading ? 'Guardando...' : (event && event.id ? 'Actualizar' : 'Crear')}
             </button>
           </div>
         </form>
