@@ -1,135 +1,43 @@
-# Calendar Frontend
+# Calendario familiar
 
-Frontend de la aplicación de calendario desarrollado con React + Vite.
+Repositorio organizado por responsabilidad. La aplicación se compone de un frontend React, una API Go y, de forma opcional, un servicio independiente de correo para recordatorios.
 
-## Características
-
-- ✅ **React + Vite** para desarrollo rápido
-- ✅ **Calendario interactivo** con React Big Calendar
-- ✅ **Gestión de eventos** (crear, editar, eliminar)
-- ✅ **Diseño responsive** optimizado para móviles
-- ✅ **Notificaciones del navegador** para recordatorios
-- ✅ **Integración con backend** via API REST
-
-## Estructura del Proyecto
-
-```
-calendar-frontend/
-├── src/
-│   ├── components/     # Componentes React
-│   │   ├── Calendar/   # Componente principal del calendario
-│   │   ├── EventForm/  # Formulario de eventos
-│   │   └── Layout/     # Layout principal
-│   ├── contexts/       # Context API para estado global
-│   ├── services/       # Servicios de API
-│   └── App.jsx         # Componente principal
-├── public/             # Archivos estáticos
-├── package.json        # Dependencias
-└── README.md          # Este archivo
+```text
+front/                       # Aplicación web React + Vite
+back/                        # API REST Go + PostgreSQL/SQLite
+back/notification-service/   # Servicio opcional de email con SendGrid
+railway.json                 # Definición de los servicios principales en Railway
 ```
 
-## Instalación
+## Desarrollo local
 
-1. **Instalar dependencias**
-   ```bash
-   npm install
-   ```
-
-2. **Ejecutar en desarrollo**
-   ```bash
-   npm run dev
-   ```
-
-3. **Construir para producción**
-   ```bash
-   npm run build
-   ```
-
-## Configuración
-
-### Variables de Entorno
-
-Crea un archivo `.env` en la raíz del proyecto:
+En una terminal, iniciar la API:
 
 ```bash
-# URL del backend API
-VITE_API_URL=https://web-production-e67c7.up.railway.app
+cd back
+go run .
 ```
 
-## Tecnologías Utilizadas
-
-- **React 18** - Framework de UI
-- **Vite** - Build tool y dev server
-- **React Big Calendar** - Componente de calendario
-- **Axios** - Cliente HTTP
-- **Date-fns** - Manipulación de fechas
-- **React Context** - Gestión de estado
-
-## Funcionalidades
-
-### Calendario
-- Vista mensual interactiva
-- Crear eventos haciendo clic en fechas
-- Editar eventos haciendo doble clic
-- Eliminar eventos desde el modal de detalles
-
-### Eventos
-- Formulario completo con validación
-- Campos: título, descripción, fecha, hora, ubicación, email, teléfono
-- Eventos de todo el día
-- Categorías y prioridades
-- Recordatorios configurables
-
-### Notificaciones
-- Notificaciones del navegador
-- Recordatorios automáticos
-- Soporte para eventos de todo el día
-
-## API Integration
-
-El frontend se conecta al backend via:
-
-- **Base URL**: `https://web-production-e67c7.up.railway.app`
-- **Endpoints**:
-  - `GET /api/v1/events/` - Obtener eventos
-  - `POST /api/v1/events/` - Crear evento
-  - `PUT /api/v1/events/:id` - Actualizar evento
-  - `DELETE /api/v1/events/:id` - Eliminar evento
-
-## Desarrollo
-
-### Scripts Disponibles
+En otra terminal, iniciar la aplicación web:
 
 ```bash
-npm run dev          # Servidor de desarrollo
-npm run build        # Construir para producción
-npm run preview      # Preview de la build
-npm run lint         # Linter
+cd front
+npm install
+npm run dev
 ```
 
-### Estructura de Componentes
+El frontend usa `http://localhost:8080` durante desarrollo. Para producción, configurá `VITE_API_URL` con la URL pública de la API.
 
-- **Calendar**: Componente principal del calendario
-- **SimpleEventForm**: Formulario para crear/editar eventos
-- **SimpleEventDetails**: Modal con detalles del evento
-- **Layout**: Layout principal con header y navegación
+## Servicios
 
-## Deployment
+| Servicio | Directorio | Puerto por defecto |
+| --- | --- | --- |
+| API de calendario | `back/` | `8080` |
+| Frontend | `front/` | `5173` en desarrollo |
+| Notificaciones por email | `back/notification-service/` | `8081` |
 
-El frontend está configurado para deploy en:
+El servicio de notificaciones es opcional mientras se decide si se conserva separado o se usa el scheduler incorporado en la API. No deben quedar ambos enviando recordatorios en producción.
 
-- **Vercel** (configuración en `vercel.json`)
-- **Netlify** (configuración en `netlify.toml`)
-- **Railway** (configuración en `railway.toml`)
+## Variables de entorno
 
-## Contribuir
-
-1. Fork el proyecto
-2. Crea una rama para tu feature
-3. Commit tus cambios
-4. Push a la rama
-5. Abre un Pull Request
-
-## Licencia
-
-Este proyecto está bajo la Licencia MIT.
+La API requiere `DATABASE_URL` y, para correo, `SENDGRID_API_KEY` y `FROM_EMAIL`. Consultá [back/env.example](back/env.example). El servicio independiente tiene su propia configuración en `back/notification-service/README.md`.

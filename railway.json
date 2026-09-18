@@ -2,7 +2,7 @@
   "services": [
     {
       "name": "calendar-backend",
-      "source": "./backend-go",
+      "source": "./back",
       "build": {
         "builder": "NIXPACKS"
       },
@@ -13,12 +13,12 @@
     },
     {
       "name": "calendar-frontend",
-      "source": "./calendar-frontend", 
+      "source": "./front",
       "build": {
         "builder": "NIXPACKS"
       },
       "deploy": {
-        "startCommand": "npm run preview",
+        "startCommand": "npm start",
         "healthcheckPath": "/"
       }
     }

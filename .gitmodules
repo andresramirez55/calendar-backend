@@ -1,0 +1,6 @@
+[submodule "front"]
+	path = front
+	url = https://github.com/andresramirez55/calendar-frontend.git
+[submodule "back/notification-service"]
+	path = back/notification-service
+	url = https://github.com/andresramirez55/notification-service.git
